@@ -14,11 +14,11 @@ void setup()
 
   logInfo("Waiting for all devices to connect...\n");
   myusb.begin();
-  while (!(uSerial1 && uSerial2 && uSerial3))//xx
+  while (!(uSerial1 && uSerial2 && uSerial3))  //xx
   {
     myusb.Task();
     delay(1);
-  }//xx
+  }  //xx
   delay(1000);
 
   for (auto port : ports)
@@ -109,15 +109,17 @@ void processFeedback(const uint8_t* p, uint32_t packetLength)
     readPayload(ms, payload, sizeof(ms));
     logInfo("axisID: %u|ref:%f | act :%f\n", ms.axisID, ms.positionSetpoint, ms.theta);
     // calculate error, do something with it. put in a array , find min inside irq.
-    fro = ((uint8_t)calcFROpos(ms.theta) * feedRate) / frMax;
+    // fro = ((uint8_t)calcFROpos(ms.theta) * ufeedRate) / frMax;
+    axisFro[ms.axisID - 1] = calcFROpos(ms.theta);// integrate tracker here as well.
+    // track axis error
   }
   else
     Serial.write(p, packetLength);
 }
 float calcFROpos(float x)
 {
-  const float a = M_PI / 4;  // 60 degrees
-  const float b = M_PI / 3;  // 90 degrees
+  const float a = M_PI / 3;  // 60 degrees
+  const float b = M_PI / 2;  // 90 degrees
   float absX = fabs(x);
 
   if (absX <= a)
@@ -197,11 +199,12 @@ void processMsg(const uint8_t* p, uint32_t packetLength)
       }
     case MSG_FEED_RATE:
       {
-        readPayload(feedRate, payload, payloadSize);
-        // logInfo("Feedrate: %u\n", feedRate);
+        readPayload(ufeedRate, payload, payloadSize);
+        governor.setTarget((float)ufeedRate);
+        // logInfo("uFeedrate: %u\n", ufeedRate);
         feedRateS s;
         s.timestamp = micros();
-        s.feedRate = feedRate;
+        s.feedRate = ufeedRate;
         ACK ack(s);
         ack.send(Serial);
         break;

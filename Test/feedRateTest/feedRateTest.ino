@@ -1,4 +1,4 @@
-#include "FroCtrl.h"
+#include <FroCtrl.h>
 
 IntervalTimer timer;
 FeedrateGovernor governor(0, 10.0f, 100);
@@ -34,7 +34,7 @@ void loop()
 
 void timerIRQ()
 {
-  governor.tick();
+  governor.tock();
   loopRateMHz = loopCounter / 1000.0f;
   loopCounter = 0;
   printFlag = true;

@@ -293,7 +293,7 @@ class SerialUIApp(ctk.CTkFrame):
             print("Disconnected.")
 
             if self.serial_process and self.serial_process.is_alive():
-                self.serial_process.terminate()
+                self.serial_process. kill()
                 self.serial_process.join()
         else:
             print("No active connection to disconnect.")

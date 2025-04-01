@@ -35,6 +35,6 @@ const int dir2 = 1;
 MotorAxis<FlexCAN_T4<CAN1, RX_SIZE_8, TX_SIZE_8>> motor1(0x01, PROX_PIN1, dir1, AXIS_L);
 MotorAxis<FlexCAN_T4<CAN2, RX_SIZE_8, TX_SIZE_8>> motor2(0x01, PROX_INT2, dir2, AXIS_R);
 IntervalTimer motor_timer;
-bool automatic;
+bool automatic=false;
 /////////////////////////////////////////////
 #endif // GLOBALS_H
