@@ -102,7 +102,7 @@ float findMin(const float* arr, size_t len)
 
 void sendIRQ()
 {
-  static volatile float resP = 0;
+  // static volatile float resP = 0;
   manFeed.tock();
   if (!(dataReceived && automatic))  // add armed or not check here.
     return;

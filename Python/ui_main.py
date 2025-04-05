@@ -312,29 +312,29 @@ class SerialUIApp(ctk.CTkFrame):
             rx_queue (Queue[str]): A queue for receiving data from the serial port.
             tx_queue (Queue[bytes]): A queue for sending data to the serial port.
         """
-        time_string = datetime.now().replace(microsecond=0).isoformat().replace(":", "-")  # Consistent timestamp
-        print(time_string)
-        log_dir = "logs"
-        os.makedirs(log_dir, exist_ok=True)
-        log_filename = f"log_{time_string}.log"
-        log_file = os.path.join(log_dir, log_filename)
+        # time_string = datetime.now().replace(microsecond=0).isoformat().replace(":", "-")  # Consistent timestamp
+        # print(time_string)
+        # log_dir = "logs"
+        # os.makedirs(log_dir, exist_ok=True)
+        # log_filename = f"log_{time_string}.log"
+        # log_file = os.path.join(log_dir, log_filename)
 
-        logging.basicConfig(
-            level=logging.INFO,
-            format="%(asctime)s - %(levelname)s - %(message)s",
-            handlers=[
-                logging.FileHandler(log_file, mode="w"),  # Create a new log file each time
-                # logging.StreamHandler()  # Print logs to console as well
-            ],
-        )
+        # logging.basicConfig(
+        #     level=logging.INFO,
+        #     format="%(asctime)s - %(levelname)s - %(message)s",
+        #     handlers=[
+        #         logging.FileHandler(log_file, mode="w"),  # Create a new log file each time
+        #         # logging.StreamHandler()  # Print logs to console as well
+        #     ],
+        # )
 
-        logger = logging.getLogger("SerialLogger")
-        logger.info("Logger started.")
+        # logger = logging.getLogger("SerialLogger")
+        # logger.info("Logger started.")
         input_buffer = b""
         ser = connect_to_serial(port=port)
         if ser is None:
             print("Child process: Unable to open serial connection.") # pop up
-            logger.info("Child process: Unable to open serial connection.")
+            # logger.info("Child process: Unable to open serial connection.")
             return
         try:
             while True:
@@ -350,7 +350,7 @@ class SerialUIApp(ctk.CTkFrame):
                 time.sleep(5e-4)
         except Exception as e:
             print(f"Serial process error: {e}")
-            logger.info(f"Serial process error: {e}")  # Log received data as text
+            # logger.info(f"Serial process error: {e}")  # Log received data as text
 
     def update_output_textbox(self, data=None) -> None:
         """Fetch data from the RX queue and update the UI textbox efficiently."""

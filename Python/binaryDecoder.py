@@ -1,6 +1,28 @@
-import struct
+import os
 import zlib
+import logging
+import struct
+from datetime import datetime
 from ackMsg import parse_payload
+
+# Setup logging once, at startup
+time_string = datetime.now().replace(microsecond=0).isoformat().replace(":", "-")
+log_dir = "logs"
+os.makedirs(log_dir, exist_ok=True)
+log_filename = f"log_{time_string}.log"
+log_file = os.path.join(log_dir, log_filename)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.FileHandler(log_file, mode="w"),
+        # logging.StreamHandler()  # Uncomment if you want console output too
+    ],
+)
+logger = logging.getLogger("SerialLogger")
+logger.info("Logger started.")
+
 # Constants matching your Teensy packet format.
 PACKET_START = 0x01
 PACKET_END   = 0x04
@@ -75,7 +97,6 @@ def process_msg(packet: bytes, rx_queue) -> None:
     start_byte = packet[0]
     end_byte = packet[-1]
 
-    # Extract fixed fields
     packet_length, = struct.unpack_from("<I", packet, 1)
     sequence_number, = struct.unpack_from("<I", packet, 5)
     sys_id = packet[9]
@@ -84,20 +105,17 @@ def process_msg(packet: bytes, rx_queue) -> None:
     crc_received, = struct.unpack_from("<I", packet, len(packet) - 5)
     crc_computed = zlib.crc32(packet[1:-5])
 
-    msg = ""
-
-    # Message content (based on msgID)
     if msg_id == MSG_INFO:
         text = payload.rstrip(b'\x00').decode('utf-8', errors='ignore')
         payload_str = f"Text: {text}"
+        logger.info(f"[INFO MSG] {text}")
+
+
     elif msg_id == MSG_ACK:
-        # byte_str = ' '.join(f'0x{byte:02X}' for byte in payload)
-        # payload_str = f"ACK Payload: {byte_str}"
         payload_str = f"ACK : {parse_payload(payload=payload)}\n"
     else:
         payload_str = f"(Unknown msgID=0x{msg_id:02X}) Raw: " + ' '.join(f'0x{b:02X}' for b in payload)
 
-    # Verbose message construction
     msg = (
         f"\n"
         f"  Packet Received:\n"
@@ -111,9 +129,9 @@ def process_msg(packet: bytes, rx_queue) -> None:
         f"  CRC Match        : {'Yes' if crc_received == crc_computed else 'No'}\n"
         f"  End Byte         : 0x{end_byte:02X}\n"
     )
-    # Append packet type info only if invalid
     if not (start_byte == 0x01 and end_byte == 0x04 and crc_received == crc_computed):
         msg += f"\n  \tPacket   Type    : Invalid"
+
     rx_queue.put(msg + "\n")
 
 

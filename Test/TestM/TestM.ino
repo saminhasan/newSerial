@@ -113,7 +113,8 @@ void processFeedback(const uint8_t* p, uint32_t packetLength)
     float diff = fabs(fabs(actualError) - fabs(predictedError));
     modelFeedrate = diff < tol;
     // logInfo("diff = %f, modelFeedrate = %s\n", diff, (diff < tol ? "true" : "false"));
-    // logInfo("Actual Error: %f, Predicted Error: %f\n", actualError, predictedError);
+    if (automatic)
+      logInfo("ID:%u, AE: %f, PE: %f\n", ms.axisID, actualError, predictedError);
 
     // static float maxDiff = 0.0;
     // static float maxActualError = 0.0;
