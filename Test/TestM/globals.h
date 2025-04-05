@@ -102,14 +102,15 @@ float findMin(const float* arr, size_t len)
 
 void sendIRQ()
 {
-  static volatile uint8_t resP = 0;
+  static volatile float resP = 0;
   manFeed.tock();
   if (!(dataReceived && automatic))  // add armed or not check here.
     return;
   // frRemainder += (uint8_t)manFeed.getFeedrate();
   frRemainder += ((uint8_t)((findMin(axisFro, 6) * manFeed.getFeedrate()) / frMax));
-  // uint8_t res = modelFeedrate ? (uint8_t)((findMin(axisFro, 6) * manFeed.getFeedrate()) / frMax) : 1;
-  // frRemainder += res;
+  // float res = modelFeedrate ? ((findMin(axisFro, 6) * manFeed.getFeedrate()) / frMax) : resP - 1;
+  // frRemainder += (uint8_t)constrain(res,0,100);
+  // resP = res;
   uint32_t deltaIndex = floor(frRemainder / frMax);
   frRemainder %= frMax;
   ArrayIndex = (ArrayIndex + deltaIndex) % trajectoryLength;
