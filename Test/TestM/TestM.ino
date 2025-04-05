@@ -54,6 +54,7 @@ void setup()
 
   uint32_t uHostStartupTime = timer;
   logInfo("USB Host Startup Time: %.2f seconds\n", uHostStartupTime / 1e6);
+  initErrorTrackers();
   logInfo("<SYSID : 4 Ready>\n");
   motor_timer.begin(sendIRQ, 1000);
   // motor_timer.priority(255);
@@ -96,9 +97,7 @@ void serialEvent()
 }
 void processFeedback(const uint8_t* p, uint32_t packetLength)
 {
-  // uint8_t sysId = p[9];
   uint8_t msgID = p[10];
-  // uint32_t payloadSize = packetLength - 16;
   const uint8_t* payload = &p[11];
   const uint8_t payloadOffset = 11;
   uint8_t ackID = p[payloadOffset];
@@ -107,28 +106,39 @@ void processFeedback(const uint8_t* p, uint32_t packetLength)
   {
     AckMotorState ms;
     readPayload(ms, payload, sizeof(ms));
-    logInfo("axisID: %u|ref:%f | act :%f\n", ms.axisID, ms.positionSetpoint, ms.theta);
-    // calculate error, do something with it. put in a array , find min inside irq.
-    // fro = ((uint8_t)calcFROpos(ms.theta) * ufeedRate) / frMax;
-    axisFro[ms.axisID - 1] = calcFROpos(ms.theta);// integrate tracker here as well.
-    // track axis error
+
+    axisFro[ms.axisID - 1] = calcFROpos(ms.theta);
+    float actualError = ms.positionSetpoint - ms.theta;
+    float predictedError = etArr[ms.axisID - 1]->update(ms.theta);
+    float diff = fabs(fabs(actualError) - fabs(predictedError));
+    modelFeedrate = diff < tol;
+    // logInfo("diff = %f, modelFeedrate = %s\n", diff, (diff < tol ? "true" : "false"));
+    // logInfo("Actual Error: %f, Predicted Error: %f\n", actualError, predictedError);
+
+    // static float maxDiff = 0.0;
+    // static float maxActualError = 0.0;
+    // static float maxPredictedError = 0.0;
+
+    // if (diff > maxDiff)
+    // {
+    //   if (!automatic) return;
+
+    //   maxDiff = diff;
+    //   maxActualError = actualError;
+    //   maxPredictedError = predictedError;
+    //   logInfo("New max error record: diff = %f, actualError = %f, predictedError = %f\n",
+    //           maxDiff, maxActualError, maxPredictedError);
+    // }
   }
   else
+  {
     Serial.write(p, packetLength);
+  }
 }
-float calcFROpos(float x)
-{
-  const float a = M_PI / 3;  // 60 degrees
-  const float b = M_PI / 2;  // 90 degrees
-  float absX = fabs(x);
 
-  if (absX <= a)
-    return 100.0;
-  else if (absX >= b)
-    return 0.0;
-  else
-    return 100.0 * (b - absX) / (b - a);
-}
+
+
+
 void processPacket(const uint8_t* p, uint32_t packetLength)
 {
   uint8_t sysId = p[9];
@@ -166,8 +176,6 @@ void processMsg(const uint8_t* p, uint32_t packetLength)
         Initpose.send(*teensy1);
         Initpose.send(*teensy2);
         Initpose.send(*teensy3);
-        // logInfo("ArrayIndex : %lu\n", ArrayIndex);
-        // logInfo("thetas[%lu]= [%f, %f, %f, %f, %f, %f]\n", ArrayIndex, thetas[ArrayIndex][0], thetas[ArrayIndex][1], thetas[ArrayIndex][2], thetas[ArrayIndex][3], thetas[ArrayIndex][4], thetas[ArrayIndex][5]);
         initPosition s;
         s.Idx = ArrayIndex;
         for (int i = 0; i < 6; ++i)
@@ -200,7 +208,7 @@ void processMsg(const uint8_t* p, uint32_t packetLength)
     case MSG_FEED_RATE:
       {
         readPayload(ufeedRate, payload, payloadSize);
-        governor.setTarget((float)ufeedRate);
+        manFeed.setTarget((float)ufeedRate);
         // logInfo("uFeedrate: %u\n", ufeedRate);
         feedRateS s;
         s.timestamp = micros();

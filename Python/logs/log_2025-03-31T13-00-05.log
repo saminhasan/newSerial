@@ -1,2 +1,0 @@
-2025-03-31 13:00:05,399 - INFO - Logger started.
-2025-03-31 13:00:20,670 - INFO - Serial process error: ClearCommError failed (PermissionError(13, 'The device does not recognize the command.', None, 22))

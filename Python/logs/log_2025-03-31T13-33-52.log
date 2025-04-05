@@ -1,2 +1,0 @@
-2025-03-31 13:33:52,694 - INFO - Logger started.
-2025-03-31 13:34:11,827 - INFO - Serial process error: ClearCommError failed (OSError(22, 'The I/O operation has been aborted because of either a thread exit or an application request.', None, 995))
