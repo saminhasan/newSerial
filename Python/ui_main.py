@@ -134,7 +134,7 @@ class SerialUIApp(ctk.CTkFrame):
         self.spinbox = SpinboxSlider(self.control_panel, to=100, step_size=1, value=self.speed)
         self.spinbox.grid(row=7, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
         self.spinbox.command = self.slider_event
-        self.eStop_button = ctk.CTkButton(self.control_panel, text="eStop",  fg_color="red4", hover_color="red")
+        self.eStop_button = ctk.CTkButton(self.control_panel, text="eStop",  fg_color="red4", hover_color="red", command=self.send_eStop)
         self.eStop_button.grid(row=8, column=0, columnspan=2, rowspan=2,padx=5, pady=5, sticky="nsew")
         self.control_panel.grid_rowconfigure(8,weight=1)
         self.reboot_button = ctk.CTkButton(
@@ -481,11 +481,12 @@ class SerialUIApp(ctk.CTkFrame):
         feedrate_cmd = FeedRate( value=np.uint8(value))
         if self.connected:
             self.serial_tx_queue.put(feedrate_cmd.rawBytes)
-
-    def send_reboot_command(self) -> None:
-        reboot_cmd = Reboot()
+    def send_eStop(self):
         if self.connected:
-            self.serial_tx_queue.put(reboot_cmd.rawBytes)
+            self.serial_tx_queue.put(eStop().rawBytes)
+    def send_reboot_command(self) -> None:
+        if self.connected:
+            self.serial_tx_queue.put(Reboot().rawBytes)
 
     def clear_output_textbox(self) -> None:
         """Clear the log output textbox."""

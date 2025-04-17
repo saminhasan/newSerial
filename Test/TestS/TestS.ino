@@ -49,6 +49,7 @@ void loop()
   delayMicroseconds(1);
   if (motor2.newConfig || motor2.newState)
     motor2.update();
+  cens();
   delayMicroseconds(1);
 }
 
@@ -157,6 +158,7 @@ void processMsg(const uint8_t* p, uint32_t packetLength)
         logInfo("NotImplementedError: 0x%X\n", msgID);
       else
         logInfo("Ignored - %u", sysID);
+      break;
   }
 }
 

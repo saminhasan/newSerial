@@ -37,4 +37,24 @@ MotorAxis<FlexCAN_T4<CAN2, RX_SIZE_8, TX_SIZE_8>> motor2(0x01, PROX_INT2, dir2, 
 IntervalTimer motor_timer;
 bool automatic=false;
 /////////////////////////////////////////////
+extern unsigned long _itcm_block_count[];
+extern uint32_t external_psram_size;
+extern char _ebss[], _heap_end[], *__brkval;
+void memInfo()
+{
+  auto sp = (char*)__builtin_frame_address(0);
+  logInfo("STACK: %7.2f KB / %4d KB (%6.2f%%)\n", (RAM_SIZE - (sp - _ebss)) / 1024.0, RAM_SIZE >> 10, 100.0 * (RAM_SIZE - (sp - _ebss)) / RAM_SIZE);
+  logInfo("HEAP : %7.2f KB / %4d KB (%6.2f%%)\n", (RAM_SIZE - (_heap_end - __brkval)) / 1024.0, RAM_SIZE >> 10, 100.0 * (RAM_SIZE - (_heap_end - __brkval)) / RAM_SIZE);
+}
+void cens(uint32_t n = 1)
+{
+  static unsigned long lastCall = 0;
+  unsigned long now = millis();
+
+  if (now - lastCall >= 1000 * n)
+  {
+    lastCall = now;
+    // memInfo();
+  }
+}
 #endif // GLOBALS_H

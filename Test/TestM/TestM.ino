@@ -74,11 +74,12 @@ void loop()
     {
       port->flush();
     }
-    // logInfo("thetas[%lu]= [%f, %f, %f, %f, %f, %f]\n", ArrayIndex, thetas[ArrayIndex][0], thetas[ArrayIndex][1], thetas[ArrayIndex][2], thetas[ArrayIndex][3], thetas[ArrayIndex][4], thetas[ArrayIndex][5]);//xx
+    // logInfo("feedrates : %f | %f | %f | %f\n", fros[0], fros[1], fros[2], Combinedfro);
 
     commandSent = false;
   }
   tick();
+  // cens();
   delayMicroseconds(50);
 }
 void tick()
@@ -109,27 +110,13 @@ void processFeedback(const uint8_t* p, uint32_t packetLength)
 
     axisFro[ms.axisID - 1] = calcFROpos(ms.theta);
     float actualError = ms.positionSetpoint - ms.theta;
-    float predictedError = etArr[ms.axisID - 1]->update(ms.theta);
-    float diff = fabs(fabs(actualError) - fabs(predictedError));
-    modelFeedrate = diff < tol;
+    float predictedError = etArr[ms.axisID - 1]->update(ms.positionSetpoint);
+    // float diff = fabs(-);
+    modelFeedrate[ms.axisID - 1] = 100 * constrain((fabs(predictedError) + tol) / fabs(actualError), 0, 1);
+
     // logInfo("diff = %f, modelFeedrate = %s\n", diff, (diff < tol ? "true" : "false"));
     if (automatic)
-      logInfo("ID:%u, AE: %f, PE: %f\n", ms.axisID, actualError, predictedError);
-
-    // static float maxDiff = 0.0;
-    // static float maxActualError = 0.0;
-    // static float maxPredictedError = 0.0;
-
-    // if (diff > maxDiff)
-    // {
-    //   if (!automatic) return;
-
-    //   maxDiff = diff;
-    //   maxActualError = actualError;
-    //   maxPredictedError = predictedError;
-    //   logInfo("New max error record: diff = %f, actualError = %f, predictedError = %f\n",
-    //           maxDiff, maxActualError, maxPredictedError);
-    // }
+      logInfo("T: %lu, ID:%u, u:%f, y:%f, AE: %f, PE: %f,%s\n", ms.timestamp, ms.axisID, ms.positionSetpoint, ms.theta, actualError, predictedError, modelFeedrate ? "True" : "False");
   }
   else
   {
@@ -170,8 +157,6 @@ void processMsg(const uint8_t* p, uint32_t packetLength)
   {
     case MSG_STAGE_POSITION:
       {
-        uint32_t idx = 0;
-        readPayload(idx, payload, payloadSize);
         ArrayIndex = 0;  // idx
         pose6D Initpose(thetas[0]);
         Initpose.send(*teensy1);

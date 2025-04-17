@@ -6,9 +6,9 @@ elapsedMicros timer;
 #include <USBHost_t36.h>
 #include <packetParser.hpp>
 #include "tracker.h"
-#define N 10000
-#define U_BUFFER_SIZE 32768
-#define INPUT_BUFFER_SIZE 240016
+#define N 12001
+#define U_BUFFER_SIZE 16384
+#define INPUT_BUFFER_SIZE 288100
 
 
 uint8_t USBBuffer[INPUT_BUFFER_SIZE];
@@ -38,26 +38,21 @@ uint8_t ufeedRate = 0;
 uint8_t fro = 0;
 const uint32_t frMax = 100;
 float axisFro[6] = { 0.0 };
-bool modelFeedrate = true;
+float modelFeedrate[6] = { 0.0 };
 const float zeta = 1.0;
 const float w_n = 2 * M_PI * 15;
 const float phi = 2 * zeta / w_n;
-const float tol = 0.002;
+const float tol = 2 * M_PI / 4096 * 4;  //?
 // bool axisHaltFlag[6] = { true };/// do this frim insdie class.
 //////////////////////////
-FeedrateGovernor manFeed(0, 16.0f, 100);
+FeedrateGovernor manFeed(0, 32.0f, 100);
 const int order = 2;
-float bCoeffs[order + 1] = { 0.9971f, -1.7916f, 0.7945f };
-float aCoeffs[order + 1] = { 1.0000f, -1.7859f, 0.7974f };
-
-// ErrorTracker et(bCoeffs, aCoeffs, order);
+float bCoeffs[order + 1] = { 0.9976f, -1.8997f, 0.9021f };
+float aCoeffs[order + 1] = { 1.0000f, -1.8949f, 0.9045f };
 ErrorTracker* etArr[6];
-// etArr[0] = new ErrorTracker(bCoeffs, aCoeffs, order);
-// etArr[1] = new ErrorTracker(bCoeffs, aCoeffs, order);
-// etArr[2] = new ErrorTracker(bCoeffs, aCoeffs, order);
-// etArr[3] = new ErrorTracker(bCoeffs, aCoeffs, order);
-// etArr[4] = new ErrorTracker(bCoeffs, aCoeffs, order);
-// etArr[5] = new ErrorTracker(bCoeffs, aCoeffs, order);
+float fros[3] = { 0.0 };
+float Combinedfro = 0.0;
+
 void initErrorTrackers()
 {
   for (int i = 0; i < 6; ++i)
@@ -88,7 +83,15 @@ PacketParser<usb_serial_class> parser(Serial, USBBuffer, INPUT_BUFFER_SIZE);
 PacketParser<USBSerial_BigBuffer> parser1(uSerial1, uSerialBuffer1, U_BUFFER_SIZE);
 PacketParser<USBSerial_BigBuffer> parser2(uSerial2, uSerialBuffer2, U_BUFFER_SIZE);
 PacketParser<USBSerial_BigBuffer> parser3(uSerial3, uSerialBuffer3, U_BUFFER_SIZE);
-
+extern unsigned long _itcm_block_count[];
+extern uint32_t external_psram_size;
+extern char _ebss[], _heap_end[], *__brkval;
+void memInfo()
+{
+  auto sp = (char*)__builtin_frame_address(0);
+  logInfo("STACK: %7.2f KB / %4d KB (%6.2f%%)\n", (RAM_SIZE - (sp - _ebss)) / 1024.0, RAM_SIZE >> 10, 100.0 * (RAM_SIZE - (sp - _ebss)) / RAM_SIZE);
+  logInfo("HEAP : %7.2f KB / %4d KB (%6.2f%%)\n", (RAM_SIZE - (_heap_end - __brkval)) / 1024.0, RAM_SIZE >> 10, 100.0 * (RAM_SIZE - (_heap_end - __brkval)) / RAM_SIZE);
+}
 
 float findMin(const float* arr, size_t len)
 {
@@ -102,15 +105,16 @@ float findMin(const float* arr, size_t len)
 
 void sendIRQ()
 {
-  // static volatile float resP = 0;
-  manFeed.tock();
   if (!(dataReceived && automatic))  // add armed or not check here.
     return;
-  // frRemainder += (uint8_t)manFeed.getFeedrate();
-  frRemainder += ((uint8_t)((findMin(axisFro, 6) * manFeed.getFeedrate()) / frMax));
-  // float res = modelFeedrate ? ((findMin(axisFro, 6) * manFeed.getFeedrate()) / frMax) : resP - 1;
-  // frRemainder += (uint8_t)constrain(res,0,100);
-  // resP = res;
+  // if (modelFeedrate)
+
+  manFeed.tock();
+  fros[0] = manFeed.getFeedrate();
+  fros[1] = findMin(axisFro, 6);
+  fros[2] = findMin(modelFeedrate, 6);
+  Combinedfro = findMin(fros, 3);
+  frRemainder += ((uint8_t)(Combinedfro));
   uint32_t deltaIndex = floor(frRemainder / frMax);
   frRemainder %= frMax;
   ArrayIndex = (ArrayIndex + deltaIndex) % trajectoryLength;
@@ -133,7 +137,7 @@ void sendIRQ()
 
 inline float calcFROpos(float x)
 {
-  const float t1 = M_PI / 6.0, t2 = M_PI / 2.0;
+  const float t1 = M_PI / 3.0, t2 = M_PI / 2.0;
   x = fabs(x);
   if (x < t1) return 100.0;
   if (x > t2) return 0.0;
@@ -141,5 +145,20 @@ inline float calcFROpos(float x)
   float num = exp(a / (x - t2));
   float den = num + exp(a / (t1 - x));
   return 100.0 * num / den;
+}
+void cens(uint32_t n = 1)
+{
+  static unsigned long lastCall = 0;
+  unsigned long now = millis();
+
+  if (now - lastCall >= 1000 * n)
+  {
+    lastCall = now;
+    memInfo();
+  }
+}
+
+static inline int wrap_index(int idx, int size) {
+    return ((idx % size) + size) % size;
 }
 #endif
