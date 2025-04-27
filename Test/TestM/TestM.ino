@@ -17,7 +17,7 @@ void setup()
   while (!(uSerial1 && uSerial2 && uSerial3))  //xx
   {
     myusb.Task();
-    delay(1);
+    yield();
   }  //xx
   delay(1000);
 
@@ -54,7 +54,7 @@ void setup()
 
   uint32_t uHostStartupTime = timer;
   logInfo("USB Host Startup Time: %.2f seconds\n", uHostStartupTime / 1e6);
-  initErrorTrackers();
+  initTrackers();
   logInfo("<SYSID : 4 Ready>\n");
   motor_timer.begin(sendIRQ, 1000);
   // motor_timer.priority(255);
@@ -105,18 +105,18 @@ void processFeedback(const uint8_t* p, uint32_t packetLength)
 
   if ((msgID == MSG_ACK) && (ackID == 5))
   {
+    if (!automatic) return;
+
     AckMotorState ms;
     readPayload(ms, payload, sizeof(ms));
-
     axisFro[ms.axisID - 1] = calcFROpos(ms.theta);
     float actualError = ms.positionSetpoint - ms.theta;
     float predictedError = etArr[ms.axisID - 1]->update(ms.positionSetpoint);
-    // float diff = fabs(-);
-    modelFeedrate[ms.axisID - 1] = 100 * constrain((fabs(predictedError) + tol) / fabs(actualError), 0, 1);
-
-    // logInfo("diff = %f, modelFeedrate = %s\n", diff, (diff < tol ? "true" : "false"));
-    if (automatic)
-      logInfo("T: %lu, ID:%u, u:%f, y:%f, AE: %f, PE: %f,%s\n", ms.timestamp, ms.axisID, ms.positionSetpoint, ms.theta, actualError, predictedError, modelFeedrate ? "True" : "False");
+    // float predictedError = etArr[ms.axisID - 1]->update(thetas[wrap_index(ArrayIndex+12, trajectoryLength)][ms.axisID - 1]);
+    float rmse = rmseT[ms.axisID - 1]->update((actualError - predictedError));
+    rmseAxis[ms.axisID - 1] = rmse;
+    // modelFeedrate[ms.axisID - 1] = 100 * constrain((fabs(predictedError) + tol) / fabs(actualError), 0, 1);
+    logInfo("T: %lu, ID:%u, u:%f, y:%f, CR: %f, PE: %f, RMSE: %f\n", ms.timestamp, ms.axisID, ms.positionSetpoint, ms.theta, ms.current, predictedError, rmse);
   }
   else
   {

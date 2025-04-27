@@ -15,9 +15,9 @@ uint8_t sysID;
 uint8_t AXIS_L;
 uint8_t AXIS_R;
 
-const uint32_t ID1 = 11304080;
-const uint32_t ID2 = 17015970;
-const uint32_t ID3 = 17016690;
+const uint32_t ID1 = 15724840 ;//11304080
+const uint32_t ID2 = 17015970;//17015970 
+const uint32_t ID3 = 17016690;//17016690 
 // const uint32_t ID1 = 15724840;
 // const uint32_t ID2 = 17016000;
 // const uint32_t ID3 = 17017360;

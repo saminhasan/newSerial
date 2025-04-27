@@ -5,23 +5,25 @@ import struct
 from datetime import datetime
 from ackMsg import parse_payload
 
-# Setup logging once, at startup
-time_string = datetime.now().replace(microsecond=0).isoformat().replace(":", "-")
-log_dir = "logs"
-os.makedirs(log_dir, exist_ok=True)
-log_filename = f"log_{time_string}.log"
-log_file = os.path.join(log_dir, log_filename)
+def logger_init():
+    # Setup logging once, at startup
+    time_string = datetime.now().replace(microsecond=0).isoformat().replace(":", "-")
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
+    log_filename = f"log_{time_string}.log"
+    log_file = os.path.join(log_dir, log_filename)
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler(log_file, mode="w"),
-        # logging.StreamHandler()  # Uncomment if you want console output too
-    ],
-)
-logger = logging.getLogger("SerialLogger")
-logger.info("Logger started.")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[
+            logging.FileHandler(log_file, mode="w"),
+            # logging.StreamHandler()  # Uncomment if you want console output too
+        ],
+    )
+    logger = logging.getLogger("SerialLogger")
+    logger.info("Logger started.")
+    return logger
 
 # Constants matching your Teensy packet format.
 PACKET_START = 0x01
@@ -44,7 +46,7 @@ MSG_TRAJECTORY_6D = 22
 MSG_INFO = 24
 MSG_ACK = 32
 
-def parse_packets(buffer: bytes, rx_queue) -> bytes:
+def parse_packets(buffer: bytes, rx_queue, logger) -> bytes:
     """
     Scan through the binary buffer and process complete packets.
     
@@ -83,17 +85,16 @@ def parse_packets(buffer: bytes, rx_queue) -> bytes:
             pos += 1
             continue
         # Process the complete packet.
-        process_msg(buffer[pos:pos+packetLength], rx_queue)
+        process_msg(buffer[pos:pos+packetLength], rx_queue, logger)
         pos += packetLength
     return buffer[pos:]
 
 
 
 
-import struct
-import zlib
 
-def process_msg(packet: bytes, rx_queue) -> None:
+
+def process_msg(packet: bytes, rx_queue, logger) -> None:
     start_byte = packet[0]
     end_byte = packet[-1]
 
@@ -143,7 +144,7 @@ import time
 import serial  # pyserial
 from queue import Queue
 
-def serial_comm_process(port: str, rx_queue: Queue, tx_queue: Queue) -> None:
+def serial_comm_process(port: str, rx_queue: Queue, tx_queue: Queue, logger) -> None:
     """
     Opens the serial port and continuously reads binary data,
     parsing complete packets and pushing INFO messages to rx_queue.
@@ -162,7 +163,7 @@ def serial_comm_process(port: str, rx_queue: Queue, tx_queue: Queue) -> None:
             buffer += ser.read(ser.in_waiting)
         
         # Parse complete packets and update the buffer with leftover data.
-        buffer = parse_packets(buffer, rx_queue)
+        buffer = parse_packets(buffer, rx_queue,logger)
         
         time.sleep(0.0005)  # sleep briefly
 

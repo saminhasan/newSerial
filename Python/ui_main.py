@@ -20,7 +20,7 @@ from multiprocessing import Queue
 from spinbox import SpinboxSlider
 from CTkMessagebox import CTkMessagebox
 from usb_event_listener import USBListener
-from binaryDecoder import parse_packets
+from binaryDecoder import parse_packets, logger_init
 
 N = 60000
 _FONT = ("Cascadia Mono", 14)
@@ -30,7 +30,7 @@ os.chdir(SCRIPT_DIR)
 sys.path.append(SCRIPT_DIR)
 clear_icon = ctk.CTkImage(light_image=Image.open("clear-all-svgrepo-com.png"), size=(20, 20))
 
-
+d_logger = logger_init()
 def connect_to_serial(port: str, baudrate: int = 1000000, timeout: int = 1) -> Optional[serial.Serial]:
     """
     Attempts to connect to a serial port with error handling.
@@ -346,7 +346,7 @@ class SerialUIApp(ctk.CTkFrame):
                             ser.write(outgoing_data)
                 if ser.in_waiting > 0:
                     input_buffer += ser.read(ser.in_waiting)
-                input_buffer = parse_packets(input_buffer, rx_queue)
+                input_buffer = parse_packets(input_buffer, rx_queue, d_logger)
                 time.sleep(5e-4)
         except Exception as e:
             print(f"Serial process error: {e}")

@@ -6,6 +6,7 @@ elapsedMicros timer;
 #include <USBHost_t36.h>
 #include <packetParser.hpp>
 #include "tracker.h"
+#include "rmse.h"
 #define N 12001
 #define U_BUFFER_SIZE 16384
 #define INPUT_BUFFER_SIZE 288100
@@ -20,7 +21,7 @@ const uint8_t sysID = 4;
 // constexpr const char* SN1 = "15724840";
 // constexpr const char* SN2 = "17016000";
 // constexpr const char* SN3 = "17017360";
-constexpr const char* SN1 = "11304080";
+constexpr const char* SN1 = "15724840";//11304080";
 constexpr const char* SN2 = "17015970";
 constexpr const char* SN3 = "17016690";
 
@@ -39,6 +40,7 @@ uint8_t fro = 0;
 const uint32_t frMax = 100;
 float axisFro[6] = { 0.0 };
 float modelFeedrate[6] = { 0.0 };
+float rmseAxis[6] = { 0.0 };
 const float zeta = 1.0;
 const float w_n = 2 * M_PI * 15;
 const float phi = 2 * zeta / w_n;
@@ -50,14 +52,18 @@ const int order = 2;
 float bCoeffs[order + 1] = { 0.9976f, -1.8997f, 0.9021f };
 float aCoeffs[order + 1] = { 1.0000f, -1.8949f, 0.9045f };
 ErrorTracker* etArr[6];
-float fros[3] = { 0.0 };
+RMSE* rmseT[6];
+uint32_t cycleN = 333;
+float rmsThreshold = 100;
+float fros[4] = { 100.0 };
 float Combinedfro = 0.0;
 
-void initErrorTrackers()
+void initTrackers()
 {
   for (int i = 0; i < 6; ++i)
   {
     etArr[i] = new ErrorTracker(bCoeffs, aCoeffs, order);
+    rmseT[i] = new RMSE(cycleN);
   }
 }
 /////////////////////////
@@ -111,9 +117,10 @@ void sendIRQ()
 
   manFeed.tock();
   fros[0] = manFeed.getFeedrate();
-  fros[1] = findMin(axisFro, 6);
-  fros[2] = findMin(modelFeedrate, 6);
-  Combinedfro = findMin(fros, 3);
+  fros[1] = 100;//findMin(axisFro, 6);
+  fros[2] = 100; //findMin(modelFeedrate, 6);
+  fros[3] = 100;//findMin(rmseAxis, 6);
+  Combinedfro = findMin(fros, 4);
   frRemainder += ((uint8_t)(Combinedfro));
   uint32_t deltaIndex = floor(frRemainder / frMax);
   frRemainder %= frMax;

@@ -1,13 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-frequency_hz = 12
-output_file = f"sine{frequency_hz}Hz6x.txt"
+frequency_hz = 8
+deg = 8
+output_file = f"sine{frequency_hz}Hz_{deg}D_6x.txt"
 Ts = 1 / 1000 
 T = 1 / frequency_hz
 t = np.arange(0, T, Ts)
 # y = np.radians(4) * np.sin(2 * np.pi * frequency_hz * t)
-y = np.radians(10) * np.sin(2 * np.pi * frequency_hz * t)
+y = np.radians(deg) * np.sin(2 * np.pi * frequency_hz * t)
 
 # # Trim last point if not circular
 # if not np.isclose(y[0], y[-1], atol=1e-6):
