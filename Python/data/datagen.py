@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 frequency_hz = 8
-deg = 8
-output_file = f"sine{frequency_hz}Hz_{deg}D_6x.txt"
+deg = 30
+output_file = f"sine{frequency_hz}Hz_{deg}D_1x.txt"
 Ts = 1 / 1000 
 T = 1 / frequency_hz
 t = np.arange(0, T, Ts)
@@ -15,10 +15,12 @@ y = np.radians(deg) * np.sin(2 * np.pi * frequency_hz * t)
 #     y = y[:-1]
 
 y = np.tile(y[:, None], (1, 6))  # Shape (N, 6)
-print(y[-2, :], y[-1, :], y[0, :], y[1, :], y[2, :])
+cols_to_zero = [1,2,3,4,5]
+y[:, cols_to_zero] = 0
+# print(y[-2, :], y[-1, :], y[0, :], y[1, :], y[2, :])
 
 np.savetxt(output_file, y, delimiter=",", fmt="%.9f")
-
+print(output_file)
 # Plot two periods (appended)
 y_vis = np.concatenate([y[:, 0], y[:, 0]])
 t_vis = np.arange(len(y_vis)) * Ts
