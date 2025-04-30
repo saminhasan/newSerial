@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-frequency_hz = 8
-deg = 30
+frequency_hz = 15.49193
+deg = 4
 output_file = f"sine{frequency_hz}Hz_{deg}D_1x.txt"
 Ts = 1 / 1000 
 T = 1 / frequency_hz

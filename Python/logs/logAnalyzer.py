@@ -25,6 +25,7 @@ file_path = filedialog.askopenfilename(
     title="Select log file",
     filetypes=[("Log Files", "*.log"), ("All Files", "*.*")]
 )
+print(file_path)
 if not file_path:
     print("No file selected.")
     exit()
@@ -91,7 +92,7 @@ for id_, d in data_by_id.items():
     })
     print(id_)
     if id_ ==1:
-        df.to_csv(f"id_{id_}_Current_8HzSine_30D.csv", index=False)
+        df.to_csv(f"id_{id_}_sine15.49193Hz_8D_1x.csv", index=False)
         print("Saved")
         pass
 
