@@ -448,7 +448,7 @@ class SerialUIApp(ctk.CTkFrame):
                 mode_cmd = Mode(value=np.uint8(0x00))
                 if self.connected:
                     self.serial_tx_queue.put(mode_cmd.rawBytes)
-                trajectory_length = TrajectoryLength( value=np.uint32(n))
+                trajectory_length = TrajectoryLength(value=np.uint32(n))
                 if self.connected:
                     self.serial_tx_queue.put(trajectory_length.rawBytes)
 
@@ -466,6 +466,7 @@ class SerialUIApp(ctk.CTkFrame):
         stage_cmd = stagePosition()
         if self.connected:
             self.serial_tx_queue.put(stage_cmd.rawBytes)
+
     def toggle_mode(self) -> None:
         """Toggle between manual and auto mode."""
         self.mode_state = not self.mode_state
@@ -478,12 +479,23 @@ class SerialUIApp(ctk.CTkFrame):
     def slider_event(self, value=0) -> None:
         self.speed = value
         # print(f"speed: {value}")
-        feedrate_cmd = FeedRate( value=np.uint8(value))
+        feedrate_cmd = FeedRate(value=np.uint8(value))
         if self.connected:
             self.serial_tx_queue.put(feedrate_cmd.rawBytes)
     def send_eStop(self):
         if self.connected:
             self.serial_tx_queue.put(eStop().rawBytes)
+        feedrate_cmd = FeedRate(value=np.uint8(0))
+        if self.connected:
+            self.serial_tx_queue.put(feedrate_cmd.rawBytes)
+        self.after(100, self.disarm)
+
+    def disarm(self):
+        print("DISARMED ESTOP")
+        disarm_cmd = Disable()
+        data = disarm_cmd.rawBytes
+        if self.connected:
+            self.serial_tx_queue.put(data)
     def send_reboot_command(self) -> None:
         if self.connected:
             self.serial_tx_queue.put(Reboot().rawBytes)

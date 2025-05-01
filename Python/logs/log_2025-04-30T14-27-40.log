@@ -1,0 +1,31 @@
+2025-04-30 14:27:40,445 - INFO - Logger started.
+2025-04-30 14:27:40,465 - INFO - [INFO MSG] No CrashReport
+
+2025-04-30 14:27:40,465 - INFO - [INFO MSG] Waiting for all devices to connect...
+
+2025-04-30 14:27:41,952 - INFO - [INFO MSG] All devices assigned.
+
+2025-04-30 14:27:41,952 - INFO - [INFO MSG] teensy1 SN: 15724840
+
+2025-04-30 14:27:41,952 - INFO - [INFO MSG] teensy2 SN: 17015970
+
+2025-04-30 14:27:41,952 - INFO - [INFO MSG] teensy3 SN: 17016690
+
+2025-04-30 14:27:41,952 - INFO - [INFO MSG] USB Host Startup Time: 57.00 seconds
+
+2025-04-30 14:27:41,952 - INFO - [INFO MSG] <SYSID : 4 Ready>
+
+2025-04-30 14:27:41,956 - INFO - [INFO MSG] No CrashReport
+
+2025-04-30 14:27:41,956 - INFO - [INFO MSG] <sysID : 3 | Serial Number : 17016690 | AxisL : 5| AxisR : 6>
+
+2025-04-30 14:27:41,956 - INFO - [INFO MSG] No CrashReport
+
+2025-04-30 14:27:41,956 - INFO - [INFO MSG] <sysID : 1 | Serial Number : 15724840 | AxisL : 1| AxisR : 2>
+
+2025-04-30 14:27:41,956 - INFO - [INFO MSG] No CrashReport
+
+2025-04-30 14:27:41,956 - INFO - [INFO MSG] <sysID : 2 | Serial Number : 17015970 | AxisL : 3| AxisR : 4>
+
+2025-04-30 14:27:45,490 - INFO - [INFO MSG] AUTO: OFF
+
