@@ -91,10 +91,9 @@ for id_, d in data_by_id.items():
         'rmse':   d['rmse'],
     })
     print(id_)
-    if id_ ==1:
-        df.to_csv(f"id_{id_}_sine15.49193Hz_8D_1x.csv", index=False)
-        print("Saved")
-        pass
+    df.to_csv(f"id_{id_}_IMU_PLT.csv", index=False)
+    print("Saved")
+    pass
 
 
 # import tkinter as tk

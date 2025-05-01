@@ -1,9 +1,7 @@
 #include "globals.h"
 
-void setup()
-{
-  while (!Serial)
-  {
+void setup() {
+  while (!Serial) {
     ;
   }
   if (CrashReport)
@@ -11,8 +9,7 @@ void setup()
   else
     logInfo("No CrashReport\n");
   parser.processPacketCallback = processPacket;
-  switch (teensySerialNumber)
-  {
+  switch (teensySerialNumber) {
     case ID1: sysID = 1; break;
     case ID2: sysID = 2; break;
     case ID3: sysID = 3; break;
@@ -30,20 +27,17 @@ void setup()
   motor_timer.begin(sendCmd, 1000);
   ///////////////////////////
 }
-void sendCmd()
-{
+void sendCmd() {
   motor1.tick();
   motor2.tick();
 }
-void eStop_motor()
-{
+void eStop_motor() {
   motor1.setVelocity(0);
   motor2.setVelocity(0);
   motor1.disable();
   motor2.disable();
 }
-void loop()
-{
+void loop() {
   if (motor1.newConfig || motor1.newState)
     motor1.update();
   delayMicroseconds(1);
@@ -53,13 +47,11 @@ void loop()
   delayMicroseconds(1);
 }
 
-void serialEvent()
-{
+void serialEvent() {
   parser.parse();
 }
 
-void processPacket(const uint8_t* p, uint32_t packetLength)
-{
+void processPacket(const uint8_t* p, uint32_t packetLength) {
   // uint8_t startByte = p[0];
   // uint32_t len = p[1] | (p[2] << 8) | (p[3] << 16) | (p[4] << 24);
   // uint32_t sequenceNum = p[5] | (p[6] << 8) | (p[7] << 16) | (p[8] << 24);
@@ -72,16 +64,14 @@ void processPacket(const uint8_t* p, uint32_t packetLength)
   //         startByte, len, sequenceNum, sysID, msgID, msgSize, crc32, endByte);
   processMsg(p, packetLength);
 }
-void processMsg(const uint8_t* p, uint32_t packetLength)
-{
+void processMsg(const uint8_t* p, uint32_t packetLength) {
 
   uint8_t sysId = p[9];
   uint8_t msgID = p[10];
   uint32_t payloadSize = packetLength - 16;
   const uint8_t* payload = &p[11];
 
-  switch (msgID)
-  {
+  switch (msgID) {
     case MSG_ENABLE:
       {
         // logInfo("ENABLE\n");  // ack motorConfig
@@ -106,28 +96,43 @@ void processMsg(const uint8_t* p, uint32_t packetLength)
         // readPayload(calibrateVal, payload, payloadSize);
         // logInfo("CALIBRATE\n");  // ack motorConfig
 
-        if ((motor1.cState == 0) && (motor2.cState == 0))
-        {
+        // if ((motor1.cState == 0) && (motor2.cState == 0))
+        // {
+        //   motor1.tState += 1;
+        //   motor2.tState += 1;
+        //   return;
+        // }
+        // else if (motor1.cState < 4)
+        // {
+        //   motor1.tState += 1;
+        //   return;
+        // }
+        // else if (motor2.cState < 4)
+        // {
+        //   motor2.tState += 1;
+        //   return;
+        // }
+        // else
+        // {
+        //   motor1.tState += 1;
+        //   motor2.tState += 1;
+        //   return;
+        // }
+
+        if ((motor1.cState == 0) && (motor2.cState == 0)) {
           motor1.tState += 1;
           motor2.tState += 1;
           return;
         }
-        else if (motor1.cState < 4)
-        {
+
+        if (motor1.cState < 5) {
           motor1.tState += 1;
-          return;
         }
-        else if (motor2.cState < 4)
-        {
+
+        if (motor2.cState < 5) {
           motor2.tState += 1;
-          return;
         }
-        else
-        {
-          motor1.tState += 1;
-          motor2.tState += 1;
-          return;
-        }
+
         break;
       }
     case MSG_MODE:
@@ -163,13 +168,11 @@ void processMsg(const uint8_t* p, uint32_t packetLength)
 }
 
 template<typename T>
-void readPayload(T& destination, const uint8_t* payload, uint32_t payloadSize)
-{
+void readPayload(T& destination, const uint8_t* payload, uint32_t payloadSize) {
   memcpy(&destination, payload, sizeof(T));
 }
 
-void ext_output1(const CAN_message_t& msg)
-{
+void ext_output1(const CAN_message_t& msg) {
   if (msg.bus == 1)
     motor1.CanRxHandler(msg);
   if (msg.bus == 2)

@@ -117,7 +117,7 @@ void sendIRQ()
 
   manFeed.tock();
   fros[0] = manFeed.getFeedrate();
-  fros[1] = 100;//findMin(axisFro, 6);
+  fros[1] = findMin(axisFro, 6);
   fros[2] = 100; //findMin(modelFeedrate, 6);
   fros[3] = 100;//findMin(rmseAxis, 6);
   Combinedfro = findMin(fros, 4);
@@ -144,7 +144,7 @@ void sendIRQ()
 
 inline float calcFROpos(float x)
 {
-  const float t1 = M_PI / 3.0, t2 = M_PI / 2.0;
+  const float t1 = M_PI / 4.0, t2 = M_PI / 2.0;
   x = fabs(x);
   if (x < t1) return 100.0;
   if (x > t2) return 0.0;
