@@ -91,7 +91,7 @@ for id_, d in data_by_id.items():
         'rmse':   d['rmse'],
     })
     print(id_)
-    df.to_csv(f"id_{id_}_IMU_PLT.csv", index=False)
+    df.to_csv(f"id_{id_}IMU_P16_5_D_1_25.csv", index=False)
     print("Saved")
     pass
 
